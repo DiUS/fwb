@@ -82,6 +82,8 @@ struct hash_context
 {
   EVP_MD_CTX *md5;
   EVP_MD_CTX *sha256;
+  bool md5_finalized;
+  bool sha256_finalized;
 };
 
 
@@ -99,6 +101,8 @@ struct hash_context *fwb_hash_context_new(void)
     goto err;
   if (EVP_DigestInit_ex(hc->sha256, EVP_sha256(), NULL) != 1)
     goto err;
+
+  hc->md5_finalized = hc->sha256_finalized = false;
 
   return hc;
 
@@ -125,21 +129,29 @@ void fwb_hash_context_free(struct hash_context *hc)
 
 bool fwb_hash_update(const uint8_t *data, unsigned len, struct hash_context *hc)
 {
-  if (EVP_DigestUpdate(hc->md5, data, len) != 1)
+  if (!hc->md5_finalized && EVP_DigestUpdate(hc->md5, data, len) != 1)
     return false;
-  if (EVP_DigestUpdate(hc->sha256, data, len) != 1)
+  if (!hc->sha256_finalized && EVP_DigestUpdate(hc->sha256, data, len) != 1)
     return false;
   return true;
 }
 
 
-bool fwb_hash_final(struct hash_context *hc, struct hash_block *hb)
+bool fwb_hash_final_md5(struct hash_context *hc, struct hash_block *hb)
 {
   unsigned len = sizeof(hb->md5);
   if (EVP_DigestFinal_ex(hc->md5, hb->md5, &len) != 1)
     return false;
-  len = sizeof(hb->sha256);
+  hc->md5_finalized = true;
+  return true;
+}
+
+
+bool fwb_hash_final_sha256(struct hash_context *hc, struct hash_block *hb)
+{
+  unsigned len = sizeof(hb->sha256);
   if (EVP_DigestFinal_ex(hc->sha256, hb->sha256, &len) != 1)
     return false;
+  hc->sha256_finalized = true;
   return true;
 }

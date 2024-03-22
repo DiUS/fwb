@@ -156,21 +156,17 @@ int main(int argc, char *argv[])
   for (auto it : data_blocks)
     append_data_block(it.first, it.second, hc, fp); // data block parts
 
-  struct hash_block hb, hbs;
-  if (!fwb_hash_final(hc, &hb))
+  struct hash_block hb;
+  if (!fwb_hash_final_md5(hc, &hb))
     error("failed to finalise hash");
   hwrite(hc, hb.md5, sizeof(hb.md5), fp); /// md5
-  // store copy of our md5 for signing
-  memcpy(hbs.md5, hb.md5, sizeof(hbs.md5));
 
-  if (!fwb_hash_final(hc, &hb))
+  if (!fwb_hash_final_sha256(hc, &hb))
     error("failed to finalise hash");
   // switch to fwrite, done with hashing
   fwrite(hb.sha256, sizeof(hb.sha256), 1, fp); // sha256
-  // store copy of our sha256 for signing
-  memcpy(hbs.sha256, hb.sha256, sizeof(hbs.sha256));
 
-  struct signature sig = fwb_sign(&hbs, sizeof(hbs), key);
+  struct signature sig = fwb_sign(&hb, sizeof(hb), key);
   if (sig.len == 0)
     error("failed to sign");
   uint16_t siglen = sig.len;

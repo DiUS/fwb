@@ -49,10 +49,10 @@ static void error(const char *msg)
 
 static size_t hread(struct hash_context *hc, void *buf, size_t n, FILE *fp)
 {
-  size_t ret = fread(buf, n, 1, fp);
-  if (!fwb_hash_update((const uint8_t *)buf, n, hc))
+  size_t ret = fread(buf, 1, n, fp);
+  if (!fwb_hash_update((const uint8_t *)buf, ret, hc))
     error("hash update failed");
-  return ret;
+  return (ret > 0) ? 1 : ret;
 }
 
 
@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
   }
 
   struct hash_block hb, hbin;
-  if (!fwb_hash_final(hc, &hb))
+  if (!fwb_hash_final_md5(hc, &hb))
     error("failed to finalise hash");
 
   if (hread(hc, hbin.md5, sizeof(hbin.md5), fp) != 1)
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
   if (fread(hbin.sha256, sizeof(hbin.sha256), 1, fp) != 1)
     error("read error sha256 hash");
 
-  if (!fwb_hash_final(hc, &hb))
+  if (!fwb_hash_final_sha256(hc, &hb))
     error("failed to finalise hash");
 
   if (memcmp(hbin.sha256, hb.sha256, sizeof(hb.sha256)) != 0)

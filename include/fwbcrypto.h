@@ -36,7 +36,8 @@ struct hash_context *fwb_hash_context_new(void);
 void fwb_hash_context_free(struct hash_context *hc);
 
 bool fwb_hash_update(const uint8_t *data, unsigned len, struct hash_context *hc);
-bool fwb_hash_final(struct hash_context *hc, struct hash_block *hb);
+bool fwb_hash_final_md5(struct hash_context *hc, struct hash_block *hb);
+bool fwb_hash_final_sha256(struct hash_context *hc, struct hash_block *hb);
 
 #ifdef __cplusplus
 }

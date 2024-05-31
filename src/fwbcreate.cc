@@ -128,6 +128,8 @@ int main(int argc, char *argv[])
     error("failed to create hash context");
 
   FILE *fp = fopen(outfile, "wb");
+  if (!fp)
+    error("failed to create output file");
   hwrite(hc, "FWB1", 4, fp); // format marker
 
   char key_id_buf[16];
